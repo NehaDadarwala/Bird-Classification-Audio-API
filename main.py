@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template, url_for
 import sys
 import load_nn_v2 as nn
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 
@@ -11,21 +13,21 @@ def predict_api():
     '''
     f = request.files['file']
     filename = f.filename
+    filePath = "/tmp/" + secure_filename(filename)
+    f.save(filePath)      
     
-    # Let assume right now that the file name is given
-    #filename = 'sample.wav'
     predictions = nn.predict(filename)
     return jsonify(predictions)
-    #return render_template('home.html',chat_in=predictions)
     
 @app.route('/prediction',methods=['GET', 'POST'])
 def predict():
     '''
     For Testing
     '''
-    
     f = request.files['file']
     filename = f.filename
+    filePath = "/tmp/" + secure_filename(filename)
+    f.save(filePath)    
     
     predictions = nn.predict(filename)
     return render_template('home.html',chat_in=predictions)

@@ -115,7 +115,7 @@ def load():
     
     with tf.Session() as sess:
         sess.run(init)
-        file_specified = 'test.mfcc'
+        file_specified = '/tmp/test.mfcc'
         example = np.loadtxt(file_specified)
         i = 0
         rows, cols = example.shape
@@ -128,12 +128,6 @@ def load():
         # see = tf.argmax(pred, 1)
         see = tf.reduce_sum(pred, 0)
 
-        def softmax(x):
-            """Compute softmax values for each sets of scores in x."""
-            e_x = np.exp(x - np.max(x))
-            return e_x / e_x.sum()
-
-
         confidence_matrix = softmax(see.eval({x: context}))
         
         #print(confidence_matrix)
@@ -141,26 +135,27 @@ def load():
         confidence_matrix = confidence_matrix * 100
         
 
-        list1 = ['black_throated_tit_GHNP', 'blackandyellow_grosbeak_GHNP', 'blackcrested_tit_GHNP', 'chestnutcrowned_laughingthrush_GHNP',
-                 'darksided_flycatcher_GHNP', 'eurasian_treecreeper_GHNP',  'golden_bushrobin_GHNP', 'great_barbet_GHNP', 
-                 'grey_bellied_cuckoo_GHNP', 'grey_bushchat_GHNP', 'greyheaded_canary_flycatcher_GHNP', 'greyhooded_warbler_GHNP', 
-                 'greywinged_blackbird_GHNP', 'himalayan_monal_GHNP', 'humes_warbler_GHNP', 'large_hawkcuckoo_GHNP', 
-                 'largebilled_crow_GHNP', 'lesser_cuckoo-GHNP', 'orangeflanked_bushrobin_GHNP', 'oriental_cuckoo_GHNP', 
-                 'palerumped_warbler_GHNP', 'redbilled_chough_GHNP', 'rock_bunting_GHNP', 'rufous_gorgetted_flycatcher_GHNP',
-                 'rufousbellied_niltava_GHNP', 'spotted_nutcracker_GHNP', 'streaked_laughingthrush_GHNP', 'variegated_laughingthrush_GHNP' ,
-                 'western_tragopan_GHNP', 'whistlers_warbler_GHNP', 'whitebrowed_fulvetta_GHNP' , 'whitecheeked_nuthatch_GHNP',
-                'yellowbellied_fantail_GHNP']
+        list1 = ['black_throated_tit', 'blackandyellow_grosbeak', 'blackcrested_tit', 'chestnutcrowned_laughingthrush',
+                 'darksided_flycatcher', 'eurasian_treecreeper',  'golden_bushrobin', 'great_barbet', 
+                 'grey_bellied_cuckoo', 'grey_bushchat', 'greyheaded_canary_flycatcher', 'greyhooded_warbler', 
+                 'greywinged_blackbird', 'himalayan_monal', 'humes_warbler', 'large_hawkcuckoo', 
+                 'largebilled_crow', 'lesser_cuckoo-GHNP', 'orangeflanked_bushrobin', 'oriental_cuckoo', 
+                 'palerumped_warbler', 'redbilled_chough', 'rock_bunting', 'rufous_gorgetted_flycatcher',
+                 'rufousbellied_niltava', 'spotted_nutcracker', 'streaked_laughingthrush', 'variegated_laughingthrush' ,
+                 'western_tragopan', 'whistlers_warbler', 'whitebrowed_fulvetta' , 'whitecheeked_nuthatch',
+                'yellowbellied_fantail']
 
         #Top Three Labels
         res = np.asarray(confidence_matrix)
 
         result = {}
-
+        
         for i in range(3):
+            rank = {}
             product = np.argmax(res)
-            #print(" Max Argument "+ str(product))
-            #print(" Array "+str(res))
-            result[i] = list1[product]
+            tmp = str(res[product])
+            rank[list1[product]] = tmp[:4]
+            result[i] = rank
             res[product] = 0
             
         #print(result)
