@@ -6,20 +6,11 @@
 
 #!/usr/local/bin/python
 
-import sys
 import numpy as np
 import tensorflow as tf
-import os
 import pickle
-from scipy.stats import mode
-import warnings
-
-from python_speech_features import mfcc
-from python_speech_features import delta
-from python_speech_features import logfbank
-import scipy.io.wavfile as wav
-
 import preprocess_v1 as preprocess
+
 
 
 # In[52]:
@@ -28,23 +19,13 @@ import preprocess_v1 as preprocess
 # Create model
 def multilayer_perceptron(_X, _weights, _biases):
     # Hidden layer with RELU activation
-    layer_1 = tf.nn.dropout(tf.nn.relu(tf.add(tf.matmul(_X, _weights['h1']), _biases['b1'])), 0.8)
-    # Hidden layer with sigmoid activation
-    layer_2 = tf.nn.dropout(tf.nn.relu(tf.add(tf.matmul(layer_1, _weights['h2']), _biases['b2'])), 0.8)
-    # layer_3 = tf.nn.relu(tf.add(tf.matmul(layer_2, _weights['h3']), _biases['b3']))
+    layer_1 = tf.nn.relu(tf.add(tf.matmul(_X, _weights['h1']), _biases['b1']))
+    layer_2 = tf.nn.relu(tf.add(tf.matmul(layer_1, _weights['h2']), _biases['b2']))
+    #layer_3 = tf.nn.relu(tf.add(tf.matmul(layer_2, _weights['h3']), _biases['b3']))
     # layer_4 = tf.nn.relu(tf.add(tf.matmul(layer_3, _weights['h4']), _biases['b4']))
     # layer_5 = tf.nn.sigmoid(tf.add(tf.matmul(layer_4, _weights['h5']), _biases['b5']))
     return tf.nn.softmax(tf.matmul(layer_2, _weights['out']) + _biases['out'])
     
-    
-################    Data Loading and Plotting    ########################
-def dense_to_one_hot(labels_dense, num_classes=10):
-    """Convert class labels from scalars to one-hot vectors."""
-    num_labels = labels_dense.shape[0]
-    index_offset = np.arange(num_labels) * num_classes
-    labels_one_hot = np.zeros((num_labels, num_classes))
-    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-    return labels_one_hot
 
 
 def indices(a, func):
@@ -53,26 +34,25 @@ def indices(a, func):
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum()
+    #e_x = np.exp(x - np.max(x))
+    #return e_x / e_x.sum()
+
+    return np.exp(x) / np.sum(np.exp(x), axis=0) 
+
 
 
 def load():
     
-    n_classes = 33 # Number of classes in bird data
     parametersFileDir = "parameters_mfcc_2.pkl"
     
     
     # Network Parameters
-    n_hidden_1 = 256  # 1st layer num features
+    #n_hidden_1 = 512  # 1st layer num features
     #n_hidden_2 = 256  # 2nd layer num features
     # n_hidden_3 = 256 # 3rd layer num features
     # n_hidden_4 = 256
     # n_hidden_5 = 128
-    n_input = 585  # input dimensionality
-
-    x = tf.placeholder("float", [None, n_input])
-    y = tf.placeholder("float", [None, n_classes])
+    #n_input = 585  # input dimensionality
     
     #print("Loading saved Weights ...")
     file_ID = parametersFileDir
@@ -87,7 +67,7 @@ def load():
     weights = {
         'h1': tf.Variable(W['h1']),
         'h2': tf.Variable(W['h2']),
-        # 'h3': tf.Variable(W['h3']),
+        #'h3': tf.Variable(W['h3']),
         # 'h4': tf.Variable(W['h4']),
         # 'h5': tf.Variable(W['h5']),
         'out': tf.Variable(W['out'])
@@ -96,7 +76,7 @@ def load():
     biases = {
         'b1': tf.Variable(b['b1']),
         'b2': tf.Variable(b['b2']),
-        # 'b3': tf.Variable(b['b3']),
+        #'b3': tf.Variable(b['b3']),
         # 'b4': tf.Variable(b['b4']),
         # 'b5': tf.Variable(b['b5']),
         'out': tf.Variable(b['out'])
@@ -106,14 +86,24 @@ def load():
 
     f.close()
 
+    return weights, biases
+    
 
-    pred = multilayer_perceptron(x, weights, biases)
+def prediction(weights, biases):
 
     #print("Testing the Neural Network")
     init = tf.initialize_all_variables()
     
+    n_classes = 33 # Number of classes in bird data
+    n_input = 585 # Number of classes in bird data
+    
+    x = tf.placeholder("float", [None, n_input])
+    #y = tf.placeholder("float", [None, n_classes])
+
+    pred = multilayer_perceptron(x, weights, biases)
     
     with tf.Session() as sess:
+        #tf.global_variables_initializer()
         sess.run(init)
         file_specified = '/tmp/test.mfcc'
         example = np.loadtxt(file_specified)
@@ -128,7 +118,7 @@ def load():
         # see = tf.argmax(pred, 1)
         see = tf.reduce_sum(pred, 0)
 
-        confidence_matrix = softmax(see.eval({x: context}))
+        confidence_matrix = softmax(see.eval({x: context}, session=sess))
         
         #print(confidence_matrix)
         
@@ -162,11 +152,12 @@ def load():
         return result
      
         
-        
+
+     
 
 def predict(filename):
     preprocess.preprocess(filename)
-    result = load()
+    result = prediction()
     #print(result)
     return result
     

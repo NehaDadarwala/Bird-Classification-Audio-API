@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify, render_template, url_for
-import sys
+from flask import Flask, request, jsonify, render_template
 import load_nn_v2 as nn
+import preprocess_v1 as pp
 from werkzeug.utils import secure_filename
 
 
@@ -16,7 +16,14 @@ def predict_api():
     filePath = "/tmp/" + secure_filename(filename)
     f.save(filePath)      
     
+    #pre-process the audio file
+    #pp.preprocess(filename)
+
+    #prediction
+    #predictions = nn.prediction(W, B)
+    
     predictions = nn.predict(filename)
+    
     return jsonify(predictions)
     
 @app.route('/prediction',methods=['GET', 'POST'])
@@ -29,8 +36,17 @@ def predict():
     filePath = "/tmp/" + secure_filename(filename)
     f.save(filePath)    
     
+    #pre-process the audio file
+    #pp.preprocess(filename)
+
+    #prediction
+    #predictions = nn.prediction(W, B)
+    
     predictions = nn.predict(filename)
+    
     return render_template('home.html',chat_in=predictions)
 
+W, B = nn.load()
+ 
 if __name__ == '__main__':
     app.run(debug=True)
